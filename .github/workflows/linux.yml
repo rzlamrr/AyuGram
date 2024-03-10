@@ -1,0 +1,58 @@
+name: Build Ayugram Linux
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: AyuGram/AyuGramDesktop
+          submodules: recursive
+          path: ayugram-desktop
+
+      - name: First set up
+        run: |
+          docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
+          docker tag ghcr.io/telegramdesktop/tdesktop/centos_env tdesktop:centos_env
+
+      - name: Ayu build
+        run: |
+          cd ayugram-desktop
+
+          docker run --rm \
+          -v $PWD:/usr/src/tdesktop \
+          tdesktop:centos_env \
+          /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
+          -D TDESKTOP_API_ID=2040 \
+          -D TDESKTOP_API_HASH=b18441a1ff607e10a989891a5462e627 \
+          -D CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+
+      - name: Check
+        run: |
+          filePath="ayugram-desktop/out/Release/AyuGram"
+          if test -f "$filePath"; then
+            echo "Build successfully done! :)"
+
+            du -sh "$filePath"
+          else
+            echo "Build error, output file does not exist."
+            exit 1
+          fi
+
+      - name: Get official latest tag
+        run: |
+          AYU_TAG=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/ayugram/ayugramdesktop/tags | jq -r '.[0].name')
+          echo "AYU_TAG=${AYU_TAG}" >> $GITHUB_ENV
+          bsdtar -czf ayugram-desktop/out/Release/AyuGram-Linux-${AYU_TAG}.tar.gz ayugram-desktop/out/Release/AyuGram
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          artifacts: "ayugram-desktop/out/Release/*.tar.gz"
+          tag: ${{ env.AYU_TAG }}
