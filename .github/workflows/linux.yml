@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: df -hLt
+      - run: df -hlT
       - uses: AutoModality/action-clean@v1
-      - run: df -hLt
+      - run: df -hlT
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -24,7 +24,7 @@ jobs:
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
           docker tag ghcr.io/telegramdesktop/tdesktop/centos_env tdesktop:centos_env
 
-      - run: df -hLt
+      - run: df -hlT
       - name: Ayu build
         run: |
           cd ayugram-desktop
