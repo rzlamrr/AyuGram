@@ -1,0 +1,33 @@
+image: gitpod/workspace-full
+
+# Commands that will run on workspace start
+tasks:
+    - name: Setup, Install & Build
+      before: |
+        docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
+        docker tag ghcr.io/telegramdesktop/tdesktop/centos_env tdesktop:centos_env
+      init: |
+        git clone --recurse-submodules https://github.com/AyuGram/AyuGramDesktop ayugram-desktop
+        
+        cd ayugram-desktop
+        docker run --rm \
+          -v $PWD:/usr/src/tdesktop \
+          tdesktop:centos_env \
+          /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
+          -D TDESKTOP_API_ID=2040 \
+          -D TDESKTOP_API_HASH=b18441a1ff607e10a989891a5462e627 \
+          -D CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+
+        filePath="ayugram-desktop/out/Release/AyuGram"
+        if test -f "$filePath"; then
+          echo "Build successfully done! :)"
+
+          du -sh "$filePath"
+        else
+          echo "Build error, output file does not exist."
+          exit 0
+        fi
+      command: |
+        pwd
+        df -hlT
+
