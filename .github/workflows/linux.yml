@@ -24,7 +24,7 @@ jobs:
           haskell: true
           large-packages: true
           docker-images: true
-          swap-storage: true
+          swap-storage: false
       - run: df -hlT
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,6 +42,7 @@ jobs:
       - name: Ayu build
         run: |
           cd ayugram-desktop
+          sed -i "s/--parallel/--parallel $(($(nproc) + 1))/g" Telegram/build/docker/centos_env/build.sh
 
           docker run --rm \
           -v $PWD:/usr/src/tdesktop \
